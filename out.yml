@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: API to upload videos to S3 via Lambda
+Parameters:
+  ExistingBucketName:
+    Type: String
+    Description: The name of the existing S3 bucket to use.
+Resources:
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      BinaryMediaTypes:
+      - image~1png
+      - image~1jpeg
+      - application~1octet-stream
+  VideoFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://lambda-artifacts-code-674aaaa08a5ddc85/eb83f2f8f05d477a67b7b2b5ae00a150
+      Handler: LambdaCronFunctions.HandlerVideoJava17
+      Runtime: java17
+      Description: Java function
+      MemorySize: 2048
+      Timeout: 10
+      Environment:
+        Variables:
+          BUCKET_NAME:
+            Ref: ExistingBucketName
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AWSLambda_ReadOnlyAccess
+      - AWSXrayWriteOnlyAccess
+      - AWSLambdaVPCAccessExecutionRole
+      - Statement:
+        - Effect: Allow
+          Action:
+          - s3:GetObject
+          - s3:PutObject
+          - s3:DeleteObject
+          Resource:
+            Fn::Sub: arn:aws:s3:::${ExistingBucketName}/*
+        - Effect: Allow
+          Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Resource:
+            Fn::Sub: arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}:*
+      Tracing: Active
+      Events:
+        PostVideoEvent:
+          Type: Api
+          Properties:
+            Path: /video/{bucketName}/{fileName}
+            Method: POST
+            RestApiId:
+              Ref: MyApi
+        GetVideoEvent:
+          Type: Api
+          Properties:
+            Path: /video/{bucketName}/{fileName}
+            Method: GET
+            RestApiId:
+              Ref: MyApi
+        DeleteVideoEvent:
+          Type: Api
+          Properties:
+            Path: /video/{bucketName}/{fileName}
+            Method: DELETE
+            RestApiId:
+              Ref: MyApi
