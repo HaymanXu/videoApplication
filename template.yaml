@@ -3,9 +3,15 @@ Transform: AWS::Serverless-2016-10-31
 Description: API to upload download and delete videos from S3 via Lambda
 
 Parameters:
-  ExistingBucketName:
+  ExistingInputBucketName:
     Type: String
-    Description: The name of the existing S3 bucket to use.
+    Description: The name of the existing S3 bucket to store input video.
+  ExistingOutputBucketName:
+    Type: String
+    Description: The name of the existing S3 bucket to store output video.
+  ExistingTranscoderPipelineId:
+    Type: String
+    Description: The ID of the existing Elastic Transcoder pipeline.
 
 Resources:
   MyApi:
@@ -20,7 +26,7 @@ Resources:
   VideoFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: target/java17-examples-1.0-SNAPSHOT.jar
+      CodeUri: target/lambda-functions-1.0-SNAPSHOT.jar
       Handler: LambdaCronFunctions.HandlerVideoJava17
       Runtime: java17
       Description: Java function
@@ -28,7 +34,7 @@ Resources:
       Timeout: 10
       Environment:
         Variables:
-          BUCKET_NAME: !Ref ExistingBucketName
+          BUCKET_NAME: !Ref ExistingInputBucketName
       Policies:
         - AWSLambdaBasicExecutionRole
         - AWSLambda_ReadOnlyAccess
@@ -40,14 +46,13 @@ Resources:
                 - s3:GetObject
                 - s3:PutObject
                 - s3:DeleteObject
-              Resource: !Sub 'arn:aws:s3:::${ExistingBucketName}/*'
+              Resource: !Sub 'arn:aws:s3:::${ExistingInputBucketName}/*'
             - Effect: Allow
               Action:
                 - logs:CreateLogGroup
                 - logs:CreateLogStream
                 - logs:PutLogEvents
               Resource: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}:*'
-
       Tracing: Active
       Events:
         PostVideoEvent:
@@ -71,3 +76,38 @@ Resources:
             Method: DELETE
             RestApiId:
               Ref: MyApi
+
+  TranscoderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: LambdaCronFunctions.TranscoderHandler
+      Runtime: java17
+      CodeUri: target/lambda-functions-1.0-SNAPSHOT.jar
+      MemorySize: 512
+      Timeout: 60
+      Environment:
+        Variables:
+          PIPELINE_ID: !Ref ExistingTranscoderPipelineId
+          OUTPUT_BUCKET: !Ref ExistingOutputBucketName
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:GetObjectAcl
+              - s3:PutObject
+              - s3:PutObjectAcl
+            Resource:
+              - Fn::Sub: arn:aws:s3:::${ExistingInputBucketName}/*
+              - Fn::Sub: arn:aws:s3:::${ExistingOutputBucketName}/*
+        - Statement:
+            Effect: Allow
+            Action:
+              - elastictranscoder:*
+            Resource: "*"
+
+Outputs:
+  TranscoderFunctionArn:
+    Description: "ARN of the Transcode function"
+    Value: !GetAtt TranscoderFunction.Arn

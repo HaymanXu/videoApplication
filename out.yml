@@ -1,10 +1,16 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: API to upload videos to S3 via Lambda
+Description: API to upload download and delete videos from S3 via Lambda
 Parameters:
-  ExistingBucketName:
+  ExistingInputBucketName:
     Type: String
-    Description: The name of the existing S3 bucket to use.
+    Description: The name of the existing S3 bucket to store input video.
+  ExistingOutputBucketName:
+    Type: String
+    Description: The name of the existing S3 bucket to store output video.
+  ExistingTranscoderPipelineId:
+    Type: String
+    Description: The ID of the existing Elastic Transcoder pipeline.
 Resources:
   MyApi:
     Type: AWS::Serverless::Api
@@ -17,7 +23,7 @@ Resources:
   VideoFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-artifacts-code-674aaaa08a5ddc85/eb83f2f8f05d477a67b7b2b5ae00a150
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/44907d8f1e86f9889d4f2f5111287d76
       Handler: LambdaCronFunctions.HandlerVideoJava17
       Runtime: java17
       Description: Java function
@@ -26,7 +32,7 @@ Resources:
       Environment:
         Variables:
           BUCKET_NAME:
-            Ref: ExistingBucketName
+            Ref: ExistingInputBucketName
       Policies:
       - AWSLambdaBasicExecutionRole
       - AWSLambda_ReadOnlyAccess
@@ -39,7 +45,7 @@ Resources:
           - s3:PutObject
           - s3:DeleteObject
           Resource:
-            Fn::Sub: arn:aws:s3:::${ExistingBucketName}/*
+            Fn::Sub: arn:aws:s3:::${ExistingInputBucketName}/*
         - Effect: Allow
           Action:
           - logs:CreateLogGroup
@@ -70,3 +76,41 @@ Resources:
             Method: DELETE
             RestApiId:
               Ref: MyApi
+  TranscoderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: LambdaCronFunctions.TranscoderHandler
+      Runtime: java17
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/44907d8f1e86f9889d4f2f5111287d76
+      MemorySize: 512
+      Timeout: 60
+      Environment:
+        Variables:
+          PIPELINE_ID:
+            Ref: ExistingTranscoderPipelineId
+          OUTPUT_BUCKET:
+            Ref: ExistingOutputBucketName
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - Statement:
+          Effect: Allow
+          Action:
+          - s3:GetObject
+          - s3:GetObjectAcl
+          - s3:PutObject
+          - s3:PutObjectAcl
+          Resource:
+          - Fn::Sub: arn:aws:s3:::${ExistingInputBucketName}/*
+          - Fn::Sub: arn:aws:s3:::${ExistingOutputBucketName}/*
+      - Statement:
+          Effect: Allow
+          Action:
+          - elastictranscoder:*
+          Resource: '*'
+Outputs:
+  TranscoderFunctionArn:
+    Description: ARN of the Transcode function
+    Value:
+      Fn::GetAtt:
+      - TranscoderFunction
+      - Arn
