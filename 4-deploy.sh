@@ -69,26 +69,7 @@ fi
 
 log "Packaging with template: $TEMPLATE"
 
-# Add Lambda Function Permissions
-aws lambda add-permission \
-    --function-name $TRANSCODER_FUNCTION_NAME \
-    --principal s3.amazonaws.com \
-    --statement-id unique-id-$(date +%s) \
-    --action "lambda:InvokeFunction" \
-    --source-arn arn:aws:s3:::$ARTIFACT_VIDEO_INPUT_BUCKET \
-    --source-account $ACCOUNT_ID
-
-# Set Up S3 Bucket Notification
-aws s3api put-bucket-notification-configuration --bucket $ARTIFACT_VIDEO_INPUT_BUCKET --notification-configuration '{
-  "LambdaFunctionConfigurations": [
-    {
-      "LambdaFunctionArn": "arn:aws:lambda:'"$REGION"':'"$ACCOUNT_ID"':function:'"$TRANSCODER_FUNCTION_NAME"'",
-      "Events": ["s3:ObjectCreated:*"]
-    }
-  ]
-}'
-
-# Package and deploy
+# Package and deploy for video
 aws cloudformation package --template-file $TEMPLATE --s3-bucket $ARTIFACT_CODE_BUCKET --output-template-file out.yml
 aws cloudformation deploy \
     --template-file out.yml \

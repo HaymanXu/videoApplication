@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 
 public class TranscoderHandler implements RequestHandler<S3Event, String> {
     private static final String PIPELINE_ID = System.getenv("PIPELINE_ID");;
-    
+
     @Override
     public String handleRequest(S3Event event, Context context) {
         LambdaLogger logger = context.getLogger();
