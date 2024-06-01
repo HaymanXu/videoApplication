@@ -72,7 +72,7 @@ public class DislikeHandler implements RequestHandler<APIGatewayProxyRequestEven
             if (iterator.hasNext()) {
                 Item likeOrDislikeTableItem = iterator.next();
                 int oldLikeValue = likeOrDislikeTableItem.getInt("like");
-
+                //like --> dislike
                 if (oldLikeValue == 1) {
                     UpdateItemSpec updateLikeOrDislikeTableItemSpec = new UpdateItemSpec()
                             .withPrimaryKey("video_id", videoId, "user_id", userId)
