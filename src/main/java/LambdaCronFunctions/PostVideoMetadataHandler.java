@@ -39,7 +39,8 @@ public class PostVideoMetadataHandler implements RequestHandler<APIGatewayProxyR
                     .withNumber("likes_count", 0)
                     .withNumber("dislikes_count", 0)
                     .withNumber("views_count", 0)
-                    .withString("video_URL", (String) inputData.get("video_URL"))
+                    .withString("bucket_name", (String) inputData.get("bucket_name"))
+                    .withString("file_name", (String) inputData.get("file_name"))
                     .withString("default_language", (String) inputData.get("default_language"));
             videoTable.putItem(videoItem);
 

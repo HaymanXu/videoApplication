@@ -141,6 +141,14 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: VideoTable
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:ListBucket
+            Resource:
+              - !Sub 'arn:aws:s3:::${ExistingOutputBucketName}'
+              - !Sub 'arn:aws:s3:::${ExistingOutputBucketName}/*'
       Events:
         PostDatabaseApi:
           Type: Api
