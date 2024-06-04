@@ -24,7 +24,7 @@ Resources:
   UploadVideoFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/9d425abffcb550d2d1c883a0a571bf69
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
       Handler: LambdaCronFunctions.UploadVideoHandler
       Runtime: java17
       Description: Java function
@@ -63,7 +63,7 @@ Resources:
     Properties:
       Handler: LambdaCronFunctions.TranscoderHandler
       Runtime: java17
-      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/9d425abffcb550d2d1c883a0a571bf69
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
       MemorySize: 512
       Timeout: 60
       Environment:
@@ -107,16 +107,16 @@ Resources:
         Ref: AWS::AccountId
       SourceArn:
         Fn::Sub: arn:aws:s3:::${ExistingInputBucketName}
-  UploadVideoMetadataApi:
+  VideoMetadataApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: dev
-      Name: UploadVideoMetadataApi
-  UploadVideoMetadataFunction:
+      Name: VideoMetadataApi
+  PostVideoMetadataFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/9d425abffcb550d2d1c883a0a571bf69
-      Handler: LambdaCronFunctions.UploadVideoMetadataHandler
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
+      Handler: LambdaCronFunctions.PostVideoMetadataHandler
       Runtime: java17
       Description: Java function
       MemorySize: 2048
@@ -128,10 +128,30 @@ Resources:
         PostDatabaseApi:
           Type: Api
           Properties:
-            Path: /v1/database/upload-video-metadata
+            Path: /v1/database/video-metadata
             Method: POST
             RestApiId:
-              Ref: UploadVideoMetadataApi
+              Ref: VideoMetadataApi
+  GetVideoMetadataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
+      Handler: LambdaCronFunctions.GetVideoMetadataHandler
+      Runtime: java17
+      Description: Java function
+      MemorySize: 2048
+      Timeout: 10
+      Policies:
+      - DynamoDBCrudPolicy:
+          TableName: VideoTable
+      Events:
+        PostDatabaseApi:
+          Type: Api
+          Properties:
+            Path: /v1/database/video-metadata/{videoId}
+            Method: GET
+            RestApiId:
+              Ref: VideoMetadataApi
   StreamVideoApi:
     Type: AWS::Serverless::Api
     Properties:
@@ -143,7 +163,7 @@ Resources:
   StreamVideoFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/9d425abffcb550d2d1c883a0a571bf69
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
       Handler: LambdaCronFunctions.StreamVideoHandler
       Runtime: java17
       Description: Java function
@@ -185,7 +205,7 @@ Resources:
   SearchVideoFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/9d425abffcb550d2d1c883a0a571bf69
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
       Handler: LambdaCronFunctions.SearchVideoHandler
       Runtime: java17
       Description: Java function
@@ -210,7 +230,7 @@ Resources:
   CommentVideoFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/9d425abffcb550d2d1c883a0a571bf69
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
       Handler: LambdaCronFunctions.CommentVideoHandler
       Runtime: java17
       Description: Java function
@@ -235,7 +255,7 @@ Resources:
   LikeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/9d425abffcb550d2d1c883a0a571bf69
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
       Handler: LambdaCronFunctions.LikeOrDislike.LikeHandler
       Runtime: java17
       Description: Java function
@@ -262,7 +282,7 @@ Resources:
   DislikeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/9d425abffcb550d2d1c883a0a571bf69
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
       Handler: LambdaCronFunctions.LikeOrDislike.DislikeHandler
       Runtime: java17
       Description: Java function
@@ -289,7 +309,7 @@ Resources:
   RemoveLikeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/9d425abffcb550d2d1c883a0a571bf69
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
       Handler: LambdaCronFunctions.LikeOrDislike.RemoveLikeHandler
       Runtime: java17
       Description: Java function
@@ -316,7 +336,7 @@ Resources:
   RemoveDislikeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/9d425abffcb550d2d1c883a0a571bf69
+      CodeUri: s3://lambda-artifacts-code-9791e0522dbf2551/fc9b5a8bfb7e399fd4ce2f8ac004b7ea
       Handler: LambdaCronFunctions.LikeOrDislike.RemoveDislikeHandler
       Runtime: java17
       Description: Java function

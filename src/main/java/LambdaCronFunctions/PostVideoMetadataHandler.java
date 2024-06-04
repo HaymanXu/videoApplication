@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
-public class UploadVideoMetadataHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class PostVideoMetadataHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private final AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().build();
     private final DynamoDB dynamoDB = new DynamoDB(client);

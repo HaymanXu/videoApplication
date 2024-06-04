@@ -102,17 +102,17 @@ Resources:
       SourceAccount: !Ref AWS::AccountId
       SourceArn: !Sub 'arn:aws:s3:::${ExistingInputBucketName}'
 
-  UploadVideoMetadataApi:
+  VideoMetadataApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: dev
-      Name: UploadVideoMetadataApi
+      Name: VideoMetadataApi
 
-  UploadVideoMetadataFunction:
+  PostVideoMetadataFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: target/lambda-functions-1.0-SNAPSHOT.jar
-      Handler: LambdaCronFunctions.UploadVideoMetadataHandler
+      Handler: LambdaCronFunctions.PostVideoMetadataHandler
       Runtime: java17
       Description: Java function
       MemorySize: 2048
@@ -124,10 +124,31 @@ Resources:
         PostDatabaseApi:
           Type: Api
           Properties:
-            Path: /v1/database/upload-video-metadata
+            Path: /v1/database/video-metadata
             Method: POST
             RestApiId:
-              Ref: UploadVideoMetadataApi
+              Ref: VideoMetadataApi
+
+  GetVideoMetadataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: target/lambda-functions-1.0-SNAPSHOT.jar
+      Handler: LambdaCronFunctions.GetVideoMetadataHandler
+      Runtime: java17
+      Description: Java function
+      MemorySize: 2048
+      Timeout: 10
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: VideoTable
+      Events:
+        PostDatabaseApi:
+          Type: Api
+          Properties:
+            Path: /v1/database/video-metadata/{videoId}
+            Method: GET
+            RestApiId:
+              Ref: VideoMetadataApi
 
   StreamVideoApi:
     Type: AWS::Serverless::Api
